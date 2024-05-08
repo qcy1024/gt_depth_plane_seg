@@ -1,0 +1,6 @@
+图是kitti/2011_09_26/2011_09_26_drive_0005_sync/image_02/data/0000000005.png
+    kitti/2011_09_26/2011_09_26_drive_0015_sync/image_02/data/0000000022.png
+    kitti/2011_09_26/2011_09_26_drive_0023_sync/image_02/data/0000000025.png
+    kitti/2011_09_26/2011_09_26_drive_0035_sync/image_02/data/0000000047.png
+
+    
