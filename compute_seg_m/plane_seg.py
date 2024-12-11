@@ -80,8 +80,13 @@ def complete_dpeth_gt(img_depth_gt):
                 img_depth_gt_ret[i+1][j+1] = sum / (8-cnt)
     return img_depth_gt_ret
 
+
 # 将img_depth_gt的像素坐标变到相机坐标，得到每一个像素点对应的空间点坐标，返回整张图对应的所有空间点坐标
 def depth_to_space_point(img_depth_gt,inv_K_T):
+    if isinstance(img_depth_gt, np.ndarray):
+        img_depth_gt = torch.from_numpy(img_depth_gt)
+    if isinstance(inv_K_T, np.ndarray):
+        inv_K_T = torch.from_numpy(inv_K_T)
     point_cloud = torch.zeros((img_depth_gt.shape[0],img_depth_gt.shape[1],3))
     # print(point_cloud.shape)
     for i in range(img_depth_gt.shape[0]):
@@ -93,7 +98,7 @@ def depth_to_space_point(img_depth_gt,inv_K_T):
                 # print(point_cloud[i,j])
     return point_cloud
 
-# 输入深度gt图，初始seed patch的大小L，图中对应的空间点坐标
+# 输入深度gt图，初始seed patch的大小L，图中对应的空间点坐标以及实例分割的gt
 # 返回初始的seed patch、seed patch的数量以及所有seed patch的list
 def get_seed_patch_seg(img_depth_gt,L,point_cloud,img_obj_seg_gt):
     # 拟合误差，平面方程[a,b,d]，平面编号，第一个像素的坐标，是否生长好了
@@ -182,7 +187,7 @@ def get_seed_patch_seg(img_depth_gt,L,point_cloud,img_obj_seg_gt):
                 j_idx += 1
         # end  while j_idx <= img_depth_gt.shape[1]-L:
         j_idx = 0
-        i_idx += 1
+        i_idx += L
     print("seed_list calculated. ")
     return seed_seg, seg_idx-1, seed_list
     
@@ -405,7 +410,7 @@ def get_seg_plane(img_depth_gt,L,inv_K_T,img_obj_seg_gt):
     # np.save(original_np_plane_seg_file_name,np_plane_seg)
     # print("original np plane seg save as:",original_np_plane_seg_file_name)
 
-# end def 
+# end def get_seg_plane
 
 img_depth_gt_path = "198_depth_gt.png"
 img_depth_gt = skimage.io.imread(img_depth_gt_path)
@@ -428,19 +433,23 @@ inv_K = torch.tensor( [ [5.8262448167737955e+02,0.000000e+00,3.1304475870804731e
                         [0.000000e+00,5.8269103270988637e+02,2.3844389626620386e+02],
                         [0.000000e+00,0.000000e+00,1.000000e+00] ])
 inv_K_T = torch.inverse(inv_K)
-print("inv_K_T = ",inv_K_T)
-# point_cloud: (H,W,3)
-
-# complete depth_gt
-# print("completing depthgt...")
-# img_depth_gt = complete_dpeth_gt(img_depth_gt)
-# img_depth_gt = img_depth_gt.numpy()
-# img_save(img_depth_gt,"completedScene1.png","c_completedScene1.png")
-# print("depth_gt_completed, shape=",img_depth_gt.shape)
 
 
-# err_T = 5
-get_seg_plane(img_depth_gt,L,inv_K_T,img_obj_seg_gt)
+if __name__ == "__main__":
+
+    print("inv_K_T = ",inv_K_T)
+    # point_cloud: (H,W,3)
+
+    # complete depth_gt
+    # print("completing depthgt...")
+    # img_depth_gt = complete_dpeth_gt(img_depth_gt)
+    # img_depth_gt = img_depth_gt.numpy()
+    # img_save(img_depth_gt,"completedScene1.png","c_completedScene1.png")
+    # print("depth_gt_completed, shape=",img_depth_gt.shape)
+
+
+    # err_T = 5
+    get_seg_plane(img_depth_gt,L,inv_K_T,img_obj_seg_gt)
 
 
                     
