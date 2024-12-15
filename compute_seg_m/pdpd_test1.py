@@ -1,3 +1,4 @@
+
 import os, sys
 import math
 import queue
@@ -33,6 +34,8 @@ img_rgb_field.from_numpy(img_rgb)
 img_depth_gt_path = "198_depth_gt.png"
 img_depth_gt = skimage.io.imread(img_depth_gt_path)
 img_depth_gt = img_depth_gt.astype(np.float32)
+dd = 1
+img_depth_gt /= dd
 img_depth_gt_field = ti.field(dtype=ti.f32, shape=(img_depth_gt.shape[0], img_depth_gt.shape[1]))
 img_depth_gt_field.from_numpy(img_depth_gt)
 img_objseg_gt_name = "198_obj_seg.png"
@@ -42,11 +45,14 @@ img_objseg_gt_field.from_numpy(img_objseg_gt)
 
 field_point_cloud = ti.field(dtype=ti.f32, shape=(img_depth_gt.shape[0], img_depth_gt.shape[1], 3))
 
-
-dd = 1
-img_depth_gt /= dd
+for i in range(100, 200):
+    for j in range(300, 400):
+        # print(f"i={i}, j={j}, img_depth_gt[i, j] = {img_depth_gt[i, j]}", end=' ')
+        print(img_depth_gt[i, j], end=' ')
+print()
+print("img_depth_gt.shape[0] = ", img_depth_gt.shape[0], ", img_depth_gt.shape[1] = ", img_depth_gt.shape[1])
 L = 10
-invalid = -2000
+invalid = -500
 
 # inv_K = torch.tensor( [ [5.8262448167737955e+02,0.000000e+00,3.1304475870804731e+02],
 #                         [0.000000e+00,5.8269103270988637e+02,2.3844389626620386e+02],
@@ -254,7 +260,7 @@ def compute_seg() -> int:
     # plane_seg_img3d = ti.field(dtype=ti.i32, shape=(img_rgb_field.shape[0], img_rgb_field.shape[1], seed_num))
     # 有seed_num个平面分割，在每一个平面idx下，有7个信息：idx, error, a, b, d, (x,y)
     # plane_list = ti.Vector.field(n=7, dtype=ti.f32, shape=(seed_num,1))
-    tao = 1
+    tao = 3
     lambdaa = 1
     alpha = 0.009
     kk = 20
@@ -400,7 +406,7 @@ def compute_seg() -> int:
 
                 # end for k in range(left, right+1)
             # end for j in range(top, down+1)      
-            if last_grow_stage_cnt == grow_stage_cnt or grow_stage_cnt > 90000:
+            if last_grow_stage_cnt == grow_stage_cnt:
                 # if last_grow_stage_cnt == grow_stage_cnt:
                 #     print(f"idx{i}: last_grow_stage_cnt == grow_stage_cnt")
                 # else :
@@ -432,7 +438,7 @@ evtual_seg_field = ti.field(dtype=int, shape=(plane_seg_img3d.shape[0], plane_se
 def merge():
     for i, j in img_depth_gt_field:
         min_err = 2e9 + 0.0
-        min_err_idx = -200
+        min_err_idx = -500
         for k in range(2, plane_seg_img3d.shape[2]):
             if plane_seg_img3d[i, j, k] != k:
                 continue
@@ -530,43 +536,39 @@ print("inv_K_T = ",inv_K_T)
 
 
 # 整体测试
-depth_to_space_point()
-initfield()
-get_seed_patch_seg()
-np_planeseg_img2d = pyscope_idxmapping()
-plane_seg_img2d.from_numpy(np_planeseg_img2d)
-get_seed_patch_seg2()
-plane_seg_img2d.from_numpy(np_planeseg_img2d)
-seed_seg = plane_seg_img2d.to_numpy()
-img_save(seed_seg, "pdpd_seedseg.png", "pdpd_c_testseed.png")
-print("seed_seg img have saved as: pdpd_seedseg.png, pdpd_c_testseed.png" )
+# depth_to_space_point()
+# initfield()
+# get_seed_patch_seg()
+# np_planeseg_img2d = pyscope_idxmapping()
+# plane_seg_img2d.from_numpy(np_planeseg_img2d)
+# get_seed_patch_seg2()
+# plane_seg_img2d.from_numpy(np_planeseg_img2d)
+# seed_seg = plane_seg_img2d.to_numpy()
+# img_save(seed_seg, "pdpd_seedseg.png", "pdpd_c_testseed.png")
+# print("seed_seg img have saved as: pdpd_seedseg.png, pdpd_c_testseed.png" )
 
-initplane_seg_img3d()
+# initplane_seg_img3d()
 
-start_time = time.time()
-a = compute_seg()
-end_time = time.time()
-print("compute_seg() have finished. time cost : ",end_time - start_time )
-merge()
+# start_time = time.time()
+# a = compute_seg()
+# end_time = time.time()
+# print("compute_seg() have finished. time cost : ",end_time - start_time )
+# merge()
 
-np_plane_list = plane_list.to_numpy()
-np_evtual_seg_field = evtual_seg_field.to_numpy()
-pyscope_merge2()
-evtual_seg_field.from_numpy(np_evtual_seg_field)
-np_evtual_seg = np.zeros((plane_seg_img2d.shape[0], plane_seg_img2d.shape[1]))
-np_evtual_seg = evtual_seg_field.to_numpy()
-img_save(np_evtual_seg, "pdpd_evtual_seg.png", "pdpd_c_evtual_seg.png")
-print("evtual_seg img have saved as: pdpd_evtual_seg.png, pdpd_c_evtual_seg.png" )
-# for i in range(seed_num+2):
-#     print(f"plane_list[{i}]: {plane_list[i, 0][0]}, {plane_list[i, 0][1]}, {plane_list[i, 0][2]}, {plane_list[i, 0][3]}, {plane_list[i, 0][4]}")
-print("evtual_seg : ", np_evtual_seg)
+# np_plane_list = plane_list.to_numpy()
+# np_evtual_seg_field = evtual_seg_field.to_numpy()
+# pyscope_merge2()
+# evtual_seg_field.from_numpy(np_evtual_seg_field)
+# np_evtual_seg = np.zeros((plane_seg_img2d.shape[0], plane_seg_img2d.shape[1]))
+# np_evtual_seg = evtual_seg_field.to_numpy()
+# img_save(np_evtual_seg, "pdpd_evtual_seg.png", "pdpd_c_evtual_seg.png")
+# print("evtual_seg img have saved as: pdpd_evtual_seg.png, pdpd_c_evtual_seg.png" )
+
+
+
+
 print()
-# print("418号的分割：")
-# for i in range(img_depth_gt.shape[0]):
-#     for j in range(img_depth_gt.shape[1]):
-#         print(plane_seg_img3d[i, j, 418], end=' ')
-#     print()
-# print_plane_list()
+
 
 # plane_seg_10 = np.zeros((plane_seg_img2d.shape[0], plane_seg_img2d.shape[1]))
 # for i in range(plane_seg_img2d.shape[0]):
